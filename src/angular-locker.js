@@ -164,10 +164,10 @@
                      */
                     this._registeredDrivers = {
                         noop: {
-                            setItem = function() {},
-                            getItem = function() {},
-                            removeItem = function() {},
-                            clear = function() {}
+                            setItem: function() {},
+                            getItem: function() {},
+                            removeItem: function() {},
+                            clear: function() {}
                         }
                     };
                     try { 
