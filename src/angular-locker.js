@@ -162,7 +162,14 @@
                     /**
                      * @type {Object}
                      */
-                    this._registeredDrivers = {};
+                    this._registeredDrivers = {
+                        noop: {
+                            setItem = function() {},
+                            getItem = function() {},
+                            removeItem = function() {},
+                            clear = function() {}
+                        }
+                    };
                     try { 
                         this._registeredDrivers.local = $window.localStorage; 
                     }
