@@ -162,10 +162,21 @@
                     /**
                      * @type {Object}
                      */
-                    this._registeredDrivers = {
-                        local: $window.localStorage,
-                        session: $window.sessionStorage
-                    };
+                    this._registeredDrivers = {};
+                    try { 
+                        this._registeredDrivers.local = $window.localStorage; 
+                    }
+                    catch(e) { 
+                        console.error('Unable to access session storage.'); 
+                        console.error(e);
+                    }
+                    try { 
+                        this._registeredDrivers.session = $window.sessionStorage; 
+                    }
+                    catch(e) { 
+                        console.error('Unable to access session storage.'); 
+                        console.error(e);
+                    }
 
                     /**
                      * Get the Storage instance from the key
