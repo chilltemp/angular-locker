@@ -59,6 +59,34 @@
         };
 
         /**
+         * Out of the box drivers
+         * 
+         * @type {Object}
+         */
+        var registeredDrivers = {
+            noop: {
+                setItem: function() {},
+                getItem: function() {},
+                removeItem: function() {},
+                clear: function() {}
+            }
+        };
+        try { 
+            registeredDrivers.local = $window.localStorage; 
+        }
+        catch(e) { 
+            console.error('Unable to access session storage.'); 
+            console.error(e);
+        }
+        try { 
+            registeredDrivers.session = $window.sessionStorage; 
+        }
+        catch(e) { 
+            console.error('Unable to access session storage.'); 
+            console.error(e);
+        }
+
+        /**
          * Set the defaults
          *
          * @type {Object}
@@ -76,11 +104,20 @@
              * Allow setting of default storage driver via `lockerProvider`
              * e.g. lockerProvider.setDefaultDriver('session');
              *
-             * @param  {String|Function}  driver
+             * @param  {String|Function|Array}  driver
              * @return {self}
              */
             setDefaultDriver: function (driver) {
-                defaults.driver = _value(driver);
+                if(angular.isArray(driver)) {
+                    angular.forEach(driver, function(value) {
+                        if(registeredDrivers[value]) {
+                            defaults.driver = value;
+                            return this;
+                        }
+                    }.bind(this));
+                } else {
+                    defaults.driver = _value(driver);
+                }
 
                 return this;
             },
@@ -169,35 +206,14 @@
                  * @param {Storage}  driver
                  * @param {String}   namespace
                  */
-                function Locker (driver, namespace) {
+                function Locker (registeredDrivers, driver, namespace) {
 
                     /**
                      * Out of the box drivers
                      * 
                      * @type {Object}
                      */
-                    this._registeredDrivers = {
-                        noop: {
-                            setItem: function() {},
-                            getItem: function() {},
-                            removeItem: function() {},
-                            clear: function() {}
-                        }
-                    };
-                    try { 
-                        this._registeredDrivers.local = $window.localStorage; 
-                    }
-                    catch(e) { 
-                        console.error('Unable to access session storage.'); 
-                        console.error(e);
-                    }
-                    try { 
-                        this._registeredDrivers.session = $window.sessionStorage; 
-                    }
-                    catch(e) { 
-                        console.error('Unable to access session storage.'); 
-                        console.error(e);
-                    }
+                    this._registeredDrivers = registeredDrivers;
 
                     /**
                      * Get the Storage instance from the key
@@ -660,7 +676,7 @@
                 };
 
                 // return the default instance
-                return new Locker(defaults.driver, defaults.namespace);
+                return new Locker(registeredDrivers, defaults.driver, defaults.namespace);
             }]
         };
 
