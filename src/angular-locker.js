@@ -59,35 +59,7 @@
         };
 
         /**
-         * Out of the box drivers
-         * 
-         * @type {Object}
-         */
-        var registeredDrivers = {
-            noop: {
-                setItem: function() {},
-                getItem: function() {},
-                removeItem: function() {},
-                clear: function() {}
-            }
-        };
-        try { 
-            registeredDrivers.local = $window.localStorage; 
-        }
-        catch(e) { 
-            console.error('Unable to access session storage.'); 
-            console.error(e);
-        }
-        try { 
-            registeredDrivers.session = $window.sessionStorage; 
-        }
-        catch(e) { 
-            console.error('Unable to access session storage.'); 
-            console.error(e);
-        }
-
-        /**
-         * Set the defaults
+         * Set the default driver and namespace
          *
          * @type {Object}
          */
@@ -104,28 +76,16 @@
              * Allow setting of default storage driver via `lockerProvider`
              * e.g. lockerProvider.setDefaultDriver('session');
              *
-             * @param  {String|Function|Array}  driver
-             * @return {self}
+             * @param {String}  driver
              */
             setDefaultDriver: function (driver) {
-                if(angular.isArray(driver)) {
-                    angular.forEach(driver, function(value) {
-                        if(registeredDrivers[value]) {
-                            defaults.driver = value;
-                            return this;
-                        }
-                    }.bind(this));
-                } else {
-                    defaults.driver = _value(driver);
-                }
+                defaults.driver = _value(driver);
 
                 return this;
             },
 
             /**
              * Get the default driver
-             *
-             * @return {String}
              */
             getDefaultDriver: function () {
                 return defaults.driver;
@@ -135,8 +95,7 @@
              * Allow setting of default namespace via `lockerProvider`
              * e.g. lockerProvider.setDefaultNamespace('myAppName');
              *
-             * @param  {String|Function}  namespace
-             * @return {self}
+             * @param {String}  namespace
              */
             setDefaultNamespace: function (namespace) {
                 defaults.namespace = _value(namespace);
@@ -146,8 +105,6 @@
 
             /**
              * Get the default namespace
-             *
-             * @return {String}
              */
             getDefaultNamespace: function () {
                 return defaults.namespace;
@@ -156,8 +113,7 @@
             /**
              * Set whether the events are enabled
              *
-             * @param  {Boolean|Function}  enabled
-             * @return {self}
+             * @param {Boolean}  enabled
              */
             setEventsEnabled: function (enabled) {
                 defaults.eventsEnabled = _value(enabled);
@@ -167,8 +123,6 @@
 
             /**
              * Get whether the events are enabled
-             *
-             * @return {Boolean}
              */
             getEventsEnabled: function () {
                 return defaults.eventsEnabled;
@@ -177,8 +131,7 @@
             /**
              * Set the separator to use with namespace in keys
              *
-             * @param  {String|Function} separator
-             * @return {self}
+             * @param {String} separator
              */
             setSeparator: function (separator) {
                 defaults.separator = _value(separator);
@@ -188,8 +141,6 @@
 
             /**
              * Get the separator
-             *
-             * @return {String}
              */
             getSeparator: function () {
                 return defaults.separator;
@@ -206,14 +157,33 @@
                  * @param {Storage}  driver
                  * @param {String}   namespace
                  */
-                function Locker (registeredDrivers, driver, namespace) {
+                function Locker (driver, namespace) {
 
                     /**
-                     * Out of the box drivers
-                     * 
                      * @type {Object}
                      */
-                    this._registeredDrivers = registeredDrivers;
+                    this._registeredDrivers = {
+                        noop: {
+                            setItem: function() {},
+                            getItem: function() {},
+                            removeItem: function() {},
+                            clear: function() {}
+                        }
+                    };
+                    try { 
+                        this._registeredDrivers.local = $window.localStorage; 
+                    }
+                    catch(e) { 
+                        console.error('Unable to access session storage.'); 
+                        console.error(e);
+                    }
+                    try { 
+                        this._registeredDrivers.session = $window.sessionStorage; 
+                    }
+                    catch(e) { 
+                        console.error('Unable to access session storage.'); 
+                        console.error(e);
+                    }
 
                     /**
                      * Get the Storage instance from the key
@@ -329,8 +299,8 @@
                     /**
                      * Trigger an event
                      *
-                     * @param  {String}  name
-                     * @param  {Object}  payload
+                     * @param  {String} name
+                     * @param  {Object} payload
                      * @return {void}
                      */
                     this._event = function (name, payload) {
@@ -521,7 +491,7 @@
                     },
 
                     /**
-                     * Return all items in storage within the current namespace/driver
+                     * Return all items in storage within the current namespace
                      *
                      * @return {Object}
                      */
@@ -540,7 +510,7 @@
                     },
 
                     /**
-                     * Remove all items set within the current namespace/driver
+                     * Remove all items set within the current namespace
                      *
                      * @return {self}
                      */
@@ -602,13 +572,10 @@
                     unbind: function ($scope, key) {
                         $parse(key).assign($scope, void 0);
                         this.forget(key);
-
-                        var watchId = key + $scope.$id;
-                        
-                        if (this._watchers[watchId]) {
+                        if (this._watchers[key + $scope.$id]) {
                             // execute the de-registration function
-                            this._watchers[watchId]();
-                            delete this._watchers[watchId];
+                            this._watchers[key + $scope.$id]();
+                            delete this._watchers[key + $scope.$id];
                         }
 
                         return this;
@@ -676,7 +643,7 @@
                 };
 
                 // return the default instance
-                return new Locker(registeredDrivers, defaults.driver, defaults.namespace);
+                return new Locker(defaults.driver, defaults.namespace);
             }]
         };
 
